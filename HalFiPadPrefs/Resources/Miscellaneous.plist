@@ -28,7 +28,7 @@
                 <key>cellClass</key>
                 <string>HalFiPadSwitchCell</string>
                 <key>label</key>
-                <string>◦ Like iPhone 11 [beta]</string>
+                <string>◦ Style iPhone 11 [beta]</string>
                 <key>key</key>
                 <string>cameraUI11</string>
                 <key>defaults</key>
@@ -130,7 +130,7 @@
                 <key>cellClass</key>
                 <string>HalFiPadSwitchCell</string>
                 <key>label</key>
-                <string>◦ Force Orientation Landscape Lock</string>
+                <string>◦ Force Oriention Landscape Lock</string>
                 <key>key</key>
                 <string>landscapeLock</string>
                 <key>defaults</key>
@@ -158,7 +158,7 @@
                 <key>cellClass</key>
                 <string>HalFiPadSwitchCell</string>
                 <key>label</key>
-                <string>◦ Make Clean</string>
+                <string>◦ No Page Dots/Icon Label</string>
                 <key>key</key>
                 <string>makeSBClean</string>
                 <key>defaults</key>

@@ -1,47 +1,81 @@
 #import "TweakCommon.h"
 
+typedef struct SBIconCoordinate {
+    NSInteger row;
+    NSInteger col;
+} SBIconCoordinate;
+
+//Gestures
+@interface SBHomeGesturePanGestureRecognizer
+-(void)reset;
+-(void)touchesEnded:(id)arg1 withEvent:(id)arg2;
+@end
+
+//Lockscreen shortcuts
+@interface CSQuickActionsView : UIView
+- (UIEdgeInsets)_buttonOutsets;
+@property (nonatomic, retain) UIControl *flashlightButton;
+@property (nonatomic, retain) UIControl *cameraButton;
+@end
+
+NSInteger screenRound, appDockRound;
+NSInteger HomeBarWidth, HomeBarHeight, HomeBarRadius;
+NSInteger batteryColorMode, gesturesMode;
+
+//iPad features
+BOOL isiPadDock, isInAppDock, isRecentApp;
+BOOL isiPadMultitask, isNewGridSwitcher;
+
+//General
+BOOL isEdgeProtect, isHomeBarAutoHide, isHomeBarSB, isHomeBarLS, isHomeBarCustom;
+BOOL isCCStatusbar, isCCGrabber, isCCAnimation, isNoBreadcrumb;
+BOOL isiPXCombination, isReachability, isLSShortcuts, isPadLock;
+
+//Battery Percent - BP
+BOOL isBatteryPercent, isPercentChargingCC;
+BOOL isHideChargingIndicator, isHideStockPercent;
+
+//Keyboard options
+BOOL isNoSwipeKeyboard, isNoGesturesKeyboard;
+
+//More options
+BOOL isFastOpenApp, isNoIconsFly, isLandscapeLock, isNoDockBackgroud;
+BOOL isMakeSBClean, isMoreIconDock, isReduceRows, isSwipeScreenshot;
+
+// Fix icons list ios 14
+%group FixiOS14
+%hook SBHDefaultIconListLayoutProvider
+-(NSUInteger)screenType {
+    CGFloat const screenHeight = UIScreen.mainScreen.bounds.size.height;
+	if (screenHeight == 568) {
+		return 0;
+	} else if (screenHeight == 667) {
+		return 1;
+	} else if (screenHeight == 736) {
+		return 2;
+	}
+    return %orig;
+}
+%end
+%end
+
+// Fix Alarm screen for Modern gesture on iOS 14
+%hook CSFullscreenNotificationView
+- (void)setFrame:(CGRect)frame {
+    if(@available(iOS 14.0, *)) {
+        %orig(CGRectSetY(frame, -44));
+    }
+}
+%end
+
+%group initEnable
+
 //Enable Gestures
 %hook BSPlatform
 - (NSInteger)homeButtonType {
     if (gesturesMode == 4 || gesturesMode == 0) return %orig;
     return 2;
 }
-%end
-
-// Mini Gestures
-%group MiniatureGesture
-static BOOL nopas = YES;
-@interface CSPasscodeViewController
--(void)passcodeLockViewCancelButtonPressed:(id)arg1 ;
-@end
-
-%hook CSPasscodeViewController
--(void)viewDidAppear:(BOOL)arg1 {
-    %orig(NO);
-    if(nopas) {
-        [self passcodeLockViewCancelButtonPressed:nil];
-        nopas = NO;
-    }
-}
-%end
-
-%hook SBControlCenterController
--(NSUInteger)presentingEdge {
-    return 1;
-}
-%end
-
-%hook CCSControlCenterDefaults
--(NSUInteger)_defaultPresentationGesture {
-    return 1;
-}
-%end
-
-%hook SBHomeGestureSettings
--(BOOL)isHomeGestureEnabled {
-    return YES;
-}
-%end
 %end
 
 // LockScreen Shortcuts
@@ -68,17 +102,119 @@ static BOOL nopas = YES;
 }
 %end
 
-// Switch StatusBar
-%group SwitchStatusBar
+// Fix CC Status Bar Overlay
+%hook CCUIModularControlCenterOverlayViewController
+- (void)setOverlayStatusBarHidden:(BOOL)arg1 {
+    if (!isCCStatusbar || statusBarMode == 0) return;
+    %orig;
+}
+%end
+
+// CC StatusBar
+%hook CCUIModularControlCenterOverlayViewController
+- (void)dismissAnimated:(bool)arg1 withCompletionHandler:(id)arg2 {
+    if ((isCCStatusbar && (gesturesMode == 4 || statusBarMode == 0)) || !isCCAnimation) {
+        arg1 = 0;
+    }
+    %orig;
+}
+%end
+
+// Edge Protect
+%hook SBDeviceApplicationSceneHandle
+-(BOOL)isEdgeProtectEnabledForHomeGesture {
+    if (isEdgeProtect) return YES;
+    return %orig;
+}
+
+// HomeBar Auto Hide
+-(BOOL)isAutoHideEnabledForHomeAffordance {
+    return isHomeBarAutoHide;
+}
+%end
+
+// No Gestures Keyboard
+%hook SBHomeGesturePanGestureRecognizer
+void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id event) {
+    [self touchesEnded: touches withEvent: event];
+    [self reset];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(id)event {
+    UITouch *touch = [touches anyObject];
+    BOOL reset = NO;
+    if(gesturesMode == 2)
+        reset = [touch locationInView:touch.view].x > touch.view.bounds.size.width / 2;
+    else if(gesturesMode == 3)
+        reset = [touch locationInView:touch.view].x < touch.view.bounds.size.width / 2;
+    if (reset || isNoGesturesKeyboard || gesturesMode == 5) {
+        resetTouch(self, touches, event);
+        return;
+    }
+    return %orig;
+}
+%end
+
+// No icon Fly
+%hook CSCoverSheetTransitionSettings
+-(BOOL)iconsFlyIn {
+    return !isNoIconsFly;
+}
+%end
+
+// No Reachability
+%hook SBReachabilityManager
+-(BOOL)gestureRecognizerShouldBegin:(id)arg1 {
+    return isReachability;
+}
+%end
+%end
+
+// Mini Gestures
+%group MiniatureGesture
+%hook SBControlCenterController
+-(NSUInteger)presentingEdge {
+    return 1;
+}
+%end
+
+%hook CCSControlCenterDefaults
+-(NSUInteger)_defaultPresentationGesture {
+    return 1;
+}
+%end
+
+%hook SBHomeGestureSettings
+-(BOOL)isHomeGestureEnabled {
+    return YES;
+}
+%end
+%end
+
+// Switch Status Bar
+%group LegacyStatusBar
+%hook _UIStatusBarVisualProvider_iOS
++(Class)class {
+    return NSClassFromString(@"_UIStatusBarVisualProvider_LegacyPhone");
+}
+%end
+%end
+
+%group iPhoneStatusBar
 %hook _UIStatusBarVisualProvider_iOS
 + (Class)class {
-    if (statusBarMode == 5)
-        return NSClassFromString(@"_UIStatusBarVisualProvider_Split61");
-    else if (statusBarMode == 2 || (screenRound > 15 && statusBarMode == 1))
-        return NSClassFromString(@"_UIStatusBarVisualProvider_RoundedPad_ForcedCellular");
-    else if (statusBarMode == 1)
-        return NSClassFromString(@"_UIStatusBarVisualProvider_Pad_ForcedCellular");
+    if (statusBarMode == 5) return NSClassFromString(@"_UIStatusBarVisualProvider_Split61");
     return NSClassFromString(@"_UIStatusBarVisualProvider_Split58");
+}
+%end
+%end
+
+%group iPadStatusBar
+%hook _UIStatusBarVisualProvider_iOS
++ (Class)class {
+    if (statusBarMode == 2 || (statusBarMode == 1 && screenRound > 15))
+        return NSClassFromString(@"_UIStatusBarVisualProvider_RoundedPad_ForcedCellular");
+    return NSClassFromString(@"_UIStatusBarVisualProvider_Pad_ForcedCellular");
 }
 %end
 %end
@@ -89,8 +225,8 @@ static BOOL nopas = YES;
 - (UIEdgeInsets)portraitLayoutInsets {
     UIEdgeInsets const x = %orig;
     NSUInteger const rows = MSHookIvar<NSUInteger>(self, "_numberOfPortraitRows");
-    if (rows==3) return %orig;
-    return UIEdgeInsetsMake(x.top+10, x.left, x.bottom, x.right);
+    if (rows <= 3) return %orig;
+    return UIEdgeInsetsMake(x.top + 12, x.left, x.bottom, x.right);
 }
 %end
 %end
@@ -184,39 +320,12 @@ static BOOL nopas = YES;
 %end
 %end
 
-// Fix CC Status Bar Overlay
-%hook CCUIModularControlCenterOverlayViewController
-- (void)setOverlayStatusBarHidden:(BOOL)arg1 {
-    if (!isCCStatusbar || statusBarMode == 0) return;
-    %orig;
-}
-%end
-
-// CC StatusBar
-%hook CCUIModularControlCenterOverlayViewController
-- (void)dismissAnimated:(bool)arg1 withCompletionHandler:(id)arg2 {
-    if(!isCCAnimation) {
-        arg1 = 0;
-    }
-    %orig(arg1, arg2);
-}
-%end
-
 // Fix CC Padding
 %group CCStatusBar
 %hook CCUIHeaderPocketView
 - (void)setFrame:(CGRect)frame {
-    if (gesturesMode == 4) {
-        if (statusBarMode == 2 || (screenRound > 15 && statusBarMode == 1))
-            %orig(CGRectSetY(frame, -11));
-        else if (statusBarMode == 3)
-            %orig(CGRectSetY(frame, 9));
-        else if (statusBarMode == 0)
-            %orig(CGRectSetY(frame, -34));
-        else
-            %orig(CGRectSetY(frame, -15));
-    } else {
-        if(statusBarMode == 2 || (screenRound > 15 && statusBarMode == 1))
+    if (gesturesMode != 4) {
+        if(statusBarMode == 2 || (statusBarMode == 1 && screenRound > 15))
             %orig(CGRectSetY(frame, -20));
         else if (statusBarMode == 0)
             %orig(CGRectSetY(frame, -42));
@@ -225,6 +334,7 @@ static BOOL nopas = YES;
         else
             %orig(CGRectSetY(frame, -24));
     }
+    %orig;
 }
 %end
 %end
@@ -343,13 +453,6 @@ static BOOL nopas = YES;
 %end
 %end
 
-// No Reachability
-%hook SBReachabilityManager
--(BOOL)gestureRecognizerShouldBegin:(id)arg1 {
-    return isReachability;
-}
-%end
-
 // Original Buttons
 %group OriginalButtons
 %hook SBLockHardwareButtonActions
@@ -426,19 +529,6 @@ int applicationDidFinishLaunching;
 %end
 %end
 
-// Edge Protect
-%hook SBDeviceApplicationSceneHandle
--(BOOL)isEdgeProtectEnabledForHomeGesture {
-    if (isEdgeProtect) return YES;
-    return %orig;
-}
-
-// HomeBar Auto Hide
--(BOOL)isAutoHideEnabledForHomeAffordance {
-    return isHomeBarAutoHide;
-}
-%end
-
 // No HomeBar LS
 %group NoHomeBarLS
 %hook CSTeachableMomentsContainerView
@@ -496,12 +586,11 @@ int applicationDidFinishLaunching;
 %end
 
 // Round Dock/AppSwitcher
-%group RoundAppDock
 %hook UITraitCollection
 -(CGFloat)displayCornerRadius {
-    return appDockRound;
+    if (enabled) return appDockRound;
+    return %orig;
 }
-%end
 %end
 
 // Rounded Screen Corner
@@ -526,28 +615,6 @@ int applicationDidFinishLaunching;
 %end
 %end
 
-// No Gestures Keyboard
-%hook SBHomeGesturePanGestureRecognizer
-void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id event) {
-    [self touchesEnded: touches withEvent: event];
-    [self reset];
-}
-
-- (void)touchesBegan:(NSSet *)touches withEvent:(id)event {
-    UITouch *touch = [touches anyObject];
-    BOOL reset = NO;
-    if(gesturesMode == 2)
-        reset = [touch locationInView:touch.view].x > touch.view.bounds.size.width / 2;
-    else if(gesturesMode == 3)
-        reset = [touch locationInView:touch.view].x < touch.view.bounds.size.width / 2;
-    if (reset || isNoGesturesKeyboard || gesturesMode == 5) {
-        resetTouch(self, touches, event);
-        return;
-    }
-    return %orig;
-}
-%end
-
 // Floating Dock
 %group FloatingDock
 %hook SBFloatingDockController
@@ -555,12 +622,14 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
     return YES;
 }
 %end
+
 // Recent Aplication
 %hook SBFloatingDockSuggestionsModel
 -(void)_setRecentsEnabled:(BOOL)arg1 {
     return %orig(isRecentApp);
 }
 %end
+
 // In-App Dock
 %hook SBFloatingDockBehaviorAssertion
 -(BOOL)gesturePossible {
@@ -629,13 +698,6 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 %end
 %end
 
-// No icon Fly
-%hook CSCoverSheetTransitionSettings
--(BOOL)iconsFlyIn {
-    return !isNoIconsFly;
-}
-%end
-
 // Fast Open App
 %group FastOpenApp
 %hook SBFFluidBehaviorSettings
@@ -682,7 +744,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
     if (self.ssGestureRecognizer) return;
     self.ssGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(ssScreenshot)];
     self.ssGestureRecognizer.minimumNumberOfTouches = 2;
-    self.ssGestureRecognizer.cancelsTouchesInView = NO;
+    self.ssGestureRecognizer.cancelsTouchesInView = YES;
     [self addGestureRecognizer:self.ssGestureRecognizer];
 }
 %end
@@ -707,15 +769,12 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 
 // No Dock Background : Normal Dock
 %group NoNomalDockBG
-@interface SBDockView : UIView {
-    UIView *_backgroundView;
-}
-@end
-
 %hook SBDockView
--(void)didMoveToWindow {
+-(void)setBackgroundAlpha:(double)arg1 {
+    %orig(0);
+}
+-(void)setBackgroundView:(UIView *)view {
     %orig;
-    UIView *view = [self valueForKey:@"_backgroundView"];
     view.hidden = YES;
 }
 %end
@@ -723,15 +782,9 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 
 // No Dock Background : Floating Dock
 %group NoFloatingDockBG
-@interface SBFloatingDockPlatterView : UIView {
-    UIView *_backgroundView;
-}
-@end
-
 %hook SBFloatingDockPlatterView
--(void)didMoveToWindow {
+-(void)setBackgroundView:(UIView *)view {
     %orig;
-    UIView *view = [self valueForKey:@"_backgroundView"];
     view.hidden = YES;
 }
 %end
@@ -782,8 +835,11 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 %end
 %end
 
-// FaceID + Padlock Animation
-%group PadLock
+// PadLock for iOS 13
+%group PadLockiOS13
+@interface WGWidgetGroupViewController : UIViewController
+@end
+
 @interface SBDashBoardMesaUnlockBehaviorConfiguration : NSObject
 - (BOOL)_isAccessibilityRestingUnlockPreferenceEnabled;
 @end
@@ -794,9 +850,6 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 @interface SBLockScreenManager : NSObject
 + (id)sharedInstance;
 - (BOOL)_finishUIUnlockFromSource:(int)arg1 withOptions:(id)arg2;
-@end
-
-@interface WGWidgetGroupViewController : UIViewController
 @end
 
 static CGFloat offset = 0;
@@ -840,13 +893,6 @@ static CGFloat offset = 0;
 }
 %end
 
-%hook WGWidgetGroupViewController
--(void)updateViewConstraints {
-    %orig;
-	[self.view setFrame:CGRectSetY(self.view.frame, self.view.frame.origin.y + (offset/2))];
-}
-%end
-
 %hook BSUICAPackageView
 - (id)initWithPackageName:(id)arg1 inBundle:(id)arg2 {
 	if (![arg1 hasPrefix:@"lock"]) return %orig;
@@ -863,6 +909,41 @@ static CGFloat offset = 0;
 }
 %end
 
+%hook WGWidgetGroupViewController
+-(void)updateViewConstraints {
+    %orig;
+	[self.view setFrame:CGRectSetY(self.view.frame, self.view.frame.origin.y + (offset/2))];
+}
+%end
+
+%hook SBUIBiometricResource
+-(id)init {
+	id r = %orig;
+	MSHookIvar<BOOL>(r, "_hasMesaHardware") = NO;
+	MSHookIvar<BOOL>(r, "_hasPearlHardware") = YES;
+	return r;
+}
+%end
+%end
+
+//PadLock for iOS 14
+%group PadLockiOS14
+%hook UIMorphingLabel
+-(void)layoutSubviews {
+    %orig;
+    UIView* colorView = MSHookIvar<UIView*>(self, "_colorView");
+    [colorView setFrame:CGRectSetY(colorView.frame, colorView.frame.origin.y + 25)];
+}
+%end
+
+%hook SBUIProudLockIconView
+-(void)layoutSubviews {
+    %orig;
+    UIView* lockView = MSHookIvar<UIView*>(self, "_lockView");
+    [lockView setFrame:CGRectSetY(lockView.frame, lockView.frame.origin.y + 45)];
+}
+%end
+
 %hook SBUIBiometricResource
 -(id)init {
 	id r = %orig;
@@ -874,6 +955,45 @@ static CGFloat offset = 0;
 %end
 
 %group MakeSBClean
+// No Page Dot
+%hook CSPageControl
+-(id)initWithFrame:(struct CGRect)arg1 {
+	return nil;
+}
+%end
+
+// No App Labels
+%hook SBMutableIconLabelImageParameters
+-(void)setTextColor:(id)arg1 {
+    %orig([UIColor clearColor]);
+}
+%end
+
+// No Press/Swipe to Unlock Text
+@interface SBUILegibilityLabel : UIView
+@end
+%hook CSTeachableMomentsContainerView
+- (void)didMoveToWindow{
+    if(@available(iOS 14.0, *)) {
+	    self.controlCenterGrabberEffectContainerView.hidden = YES;
+    }
+	%orig;
+}
+- (void)_layoutCallToActionLabel{
+    SBUILegibilityLabel* label = MSHookIvar<SBUILegibilityLabel *>(self, "_callToActionLabel");
+    label.hidden = YES;
+	%orig;
+}
+%end
+
+%hook SBUICallToActionLabel
+-(id)initWithFrame:(struct CGRect)arg1 {
+	return nil;
+}
+%end
+%end
+
+%group MakeSBClean13
 // NoWidgetFooter
 @interface WGWidgetAttributionView
 @property (nonatomic, assign, readwrite, getter=isHidden) BOOL hidden;
@@ -886,106 +1006,192 @@ static CGFloat offset = 0;
 }
 %end
 
-// NoPageDots
 %hook SBIconListPageControl
 - (id)initWithFrame:(struct CGRect)arg1 {
 	return nil;
 }
 %end
+%end
 
-%hook CSPageControl
+%group MakeSBClean14
+%hook _UIPageControlIndicatorContentView
 -(id)initWithFrame:(struct CGRect)arg1 {
 	return nil;
 }
 %end
+%end
 
-// NoAppLabels
-%hook SBMutableIconLabelImageParameters
--(void)setTextColor:(id)arg1 {
-    %orig([UIColor clearColor]);
+static void updatePrefs() {
+    @autoreleasepool {
+        NSString *path = @"/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
+        NSString *pathDefault = @"/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        if (![fileManager fileExistsAtPath:path]) {
+            [fileManager copyItemAtPath:pathDefault toPath:path error:nil];
+        }
+        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+        if (prefs) {
+            enabled = boolValueForKey(@"Enabled", prefs);
+            batteryColorMode = intValueForKey(@"batteryColorMode", prefs);
+            gesturesMode = intValueForKey(@"gesturesMode", prefs);
+            statusBarMode = intValueForKey(@"statusBarMode", prefs);
+            screenMode = intValueForKey(@"screenMode", prefs);
+            screenRound = intValueForKey(@"screenRound", prefs);
+            appDockRound = intValueForKey(@"roundAppDock", prefs);
+            HomeBarWidth = intValueForKey(@"homeBarWidth", prefs);
+            HomeBarHeight = intValueForKey(@"homeBarHeight", prefs);
+            HomeBarRadius = intValueForKey(@"homeBarRadius", prefs);
+            //iPad features:
+            isiPadDock = boolValueForKey(@"ipadDock", prefs);
+            isiPadMultitask = boolValueForKey(@"iPadMultitask", prefs);
+            isRecentApp = boolValueForKey(@"recentApp", prefs);
+            isNewGridSwitcher = boolValueForKey(@"newSwitcher", prefs);
+            isInAppDock = boolValueForKey(@"inAppDock", prefs);
+            //General options:
+            isCCAnimation = boolValueForKey(@"ccAnimation", prefs);
+            isCCStatusbar = boolValueForKey(@"ccStatusBar", prefs);
+            isCCGrabber = boolValueForKey(@"ccGrabber", prefs);
+            //HomeBar
+            isEdgeProtect = boolValueForKey(@"edgeProtect", prefs);
+            isHomeBarAutoHide = boolValueForKey(@"homeBarAutoHide", prefs);
+            isHomeBarSB = boolValueForKey(@"homeBarSB", prefs);
+            isHomeBarLS = boolValueForKey(@"homeBarLS", prefs);
+            isHomeBarCustom = boolValueForKey(@"homeBarCustom", prefs);
+            isLSShortcuts = boolValueForKey(@"lsShortcuts", prefs);
+            isNoBreadcrumb = boolValueForKey(@"noBreadcrumb", prefs);
+            isReachability = boolValueForKey(@"noReachability", prefs);
+            isiPXCombination = boolValueForKey(@"ipxCombination", prefs);
+            //Battery Customization:
+            isBatteryPercent = boolValueForKey(@"batteryPercent", prefs);
+            isHideChargingIndicator = boolValueForKey(@"hideChargingIndicator", prefs);
+            isHideStockPercent = boolValueForKey(@"hideStockPercent", prefs);
+            isPercentChargingCC = boolValueForKey(@"percentChargingCC", prefs);
+            //Keyboard options:
+            isNoSwipeKeyboard = boolValueForKey(@"noSwipeKeyboard", prefs);
+            // More options:
+            isMakeSBClean = boolValueForKey(@"makeSBClean", prefs);
+            isMoreIconDock = boolValueForKey(@"moreIconDock", prefs);
+            isNoDockBackgroud = boolValueForKey(@"noDockBackground", prefs);
+            isNoIconsFly = boolValueForKey(@"noIconsFly", prefs);
+            isFastOpenApp = boolValueForKey(@"fastOpenApp", prefs);
+            isSwipeScreenshot = boolValueForKey(@"swipeScreenshot", prefs);
+            isLandscapeLock = boolValueForKey(@"landscapeLock", prefs);
+            isReduceRows = boolValueForKey(@"reduceRows", prefs);
+            isPadLock = boolValueForKey(@"padLock", prefs);
+        }
+    }
 }
-%end
-
-// Folder
-%hook SBFolderBackgroundView
-- (id)initWithFrame:(struct CGRect)arg1{
-  	return NULL;
-}
-%end
-
-%hook SBFolderIconImageView
- - (void)setBackgroundView : (UIView *)backgroundView {}
-%end
-%end
 
 // Tweak handle
 %ctor {
     @autoreleasepool {
+        %init;
         updatePrefs();
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)updatePrefs,
             CFSTR("com.hius.HalFiPadPrefs.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce
         );
+
         if (enabled) {
+            %init(initEnable);
+            
             // StatusBar Style
             if (statusBarMode != 0) {
-                %init(SwitchStatusBar);
-                if (statusBarMode == 4)
-                    %init(StatusBarCalibrate58);
-                else if(statusBarMode == 5)
-                    %init(StatusBarCalibrate61);
-                else if (statusBarMode == 3)
-                    %init(StatusBarXFix);
-            }
+                if (statusBarMode == 1 || statusBarMode == 2) {
+                    %init(iPadStatusBar);
+                } else {
+                    %init(iPhoneStatusBar);
+                    if (statusBarMode == 5) {
+                        if(@available(iOS 14.0, *))
+                            statusBarMode = 4;
+                        else
+                            %init(StatusBarCalibrate61);
+                    }
+                    if (statusBarMode == 4)
+                        %init(StatusBarCalibrate58);
+                    else
+                        %init(StatusBarXFix);
+                }
+            } else {
+                %init(LegacyStatusBar);
+            }// end
+
+            // Gestures Style
             if (gesturesMode != 0) {
                 %init(CCStatusBar);
-                if (gesturesMode==4)
+                if (gesturesMode == 4) {
                     %init(MiniatureGesture);
+                } else {
+                    if(@available(iOS 14.0, *)) {
+                        %init(FixiOS14);
+                    }
+                }
             } else {
                 %init(FixCC134);
                 isiPadMultitask = NO;
-            }
+            }//
+
             // iPad features
             if(isiPadDock) {
                 %init(FloatingDock);
-                if (isiPadMultitask)
-                    %init(iPadMultitask);
+                if (isiPadMultitask) %init(iPadMultitask);
             }
+
             if (isNewGridSwitcher) %init(NewGridSwitcher);
+
             // Global options
             if (isBatteryPercent) %init(BatteryPercentage);
             if (isCCGrabber) %init(ccGrabber);
             if (!isCCStatusbar) %init(NoCCStatusBar);
             if (isNoBreadcrumb) %init(NoBreadcrumb);
             if (!isiPXCombination) %init(OriginalButtons);
+
+            if (isPadLock) {
+                if (@available(iOS 14.0, *)) {
+                    %init(PadLockiOS14);
+                } else {
+                    %init(PadLockiOS13);
+                }
+            }
+
             // Round Corner
             if (screenRound > 0) %init(RoundCorner);
-            if (appDockRound > 5) %init(RoundAppDock);
+
             // More options
-            if (isMakeSBClean) %init(MakeSBClean);
+            if (isMakeSBClean) {
+                %init(MakeSBClean);
+                if (@available(iOS 14.0, *))
+                    %init(MakeSBClean14);
+                else
+                    %init(MakeSBClean13);
+            }
+
             if (isMoreIconDock) %init(MoreIconDock);
             if (isFastOpenApp) %init(FastOpenApp);
+
             if (isNoDockBackgroud) {
                 if(!isiPadDock)
                     %init(NoNomalDockBG);
                 else
                     %init(NoFloatingDockBG);
             }
+
             if (isSwipeScreenshot) %init(SwipeToScreenshot);
             if (isReduceRows) %init(ReduceRows);
             if (isLandscapeLock) %init(LandscapeLock);
-            if (isPadLock) %init(PadLock);
 
             // Home Bar
             if (isHomeBarAutoHide) {
                 isHomeBarSB = YES;
             }
+
             if (!isHomeBarLS) {
                 %init(NoHomeBarLS);
                 if (!isHomeBarSB) %init(NoHomeBar);
             } else {
                 %init(HomeBar);
             }
+
             if (isHomeBarSB || isHomeBarLS) {
                 if (isHomeBarCustom) %init(HomeBarCustom);
             }
@@ -994,8 +1200,6 @@ static CGFloat offset = 0;
                 [[NSNotificationCenter defaultCenter] addObserverForName:UIKeyboardDidShowNotification object:nil queue:nil usingBlock:^(NSNotification *n) {isNoGesturesKeyboard = true;} ];
                 [[NSNotificationCenter defaultCenter] addObserverForName:UIKeyboardWillHideNotification object:nil queue:nil usingBlock:^(NSNotification *n) {isNoGesturesKeyboard = false;} ];
             }
-            
-            %init;
         }
     }
 }

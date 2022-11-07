@@ -1,15 +1,36 @@
 #import "TweakCommon.h"
+#define keyy(key) CFEqual(string, CFSTR(key))
+#include <sys/sysctl.h>
 
-// Bottom Inset
+NSInteger bottomInset;
+NSInteger KeyboardHeight = 46, KeyboardBound = -18;
+
+//Keyboard options
+BOOL isHigherKeyboard, isDarkKeyboard, isNonLatinKeyboard;
+
+//Camera Options
+BOOL isCameraBottomSet, isCameraUI11, isCameraZoomFlip11;
+
+BOOL isPIP;
+
+// Edge Inset / fix top for iOS 14
 %hook UIWindow
-- (UIEdgeInsets)safeAreaInsets {
-    UIEdgeInsets const x = %orig;
-    return UIEdgeInsetsMake(x.top, x.left, bottomInset, x.right);
+-(UIEdgeInsets)safeAreaInsets {
+    UIEdgeInsets orig = %orig;
+    if (enabled) {
+        if (@available(iOS 14.0, *)) {
+            CGFloat const screenHeight = UIScreen.mainScreen.bounds.size.height;
+            if (screenHeight >= 568 && screenHeight <= 736) {
+                orig.top = 20;
+            }
+        }
+        orig.bottom = bottomInset;
+    }
+    return orig;
 }
 %end
 
 %group FixInstagram
-#include <sys/sysctl.h>
 %hookf(int, sysctlbyname, const char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
 	if (strcmp(name, "hw.machine") == 0) {
         int ret = %orig;
@@ -26,13 +47,11 @@
 
 // Fix Twitter
 %group FixTwitter
-%hook TFNNavigationBarOverlayView 
+%hook TFNNavigationBarOverlayView
 - (void)setFrame:(CGRect)frame {
-    bottomInset = 0;
     if (statusBarMode == 3) {
-        %orig(CGRectMake(frame.origin.x,frame.origin.y,frame.size.width,frame.size.height + 6));
-    }
-    else {
+        %orig(CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height + 6));
+    } else {
         %orig;
     }
 }
@@ -59,24 +78,18 @@
 %hook YTSearchView
 - (void)setFrame:(CGRect)frame {
     if (statusBarMode == 3)
-        %orig(CGRectSetY(frame, frame.origin.y + 40));
+        %orig(CGRectSetY(frame, 40));
     else
-        %orig(CGRectSetY(frame, frame.origin.y + 20));
+        %orig(CGRectSetY(frame, 20));
 }
 %end
 
-@interface YTHeaderContentComboView : UIView
-- (UIView*)headerView;
-@end
-%hook YTHeaderContentComboView
-- (void)layoutSubviews {
-    %orig;
-    if (statusBarMode == 3) {
-        CGRect headerViewFrame = [[self headerView] frame];
-        headerViewFrame.origin.y += 18;
-        [[self headerView] setFrame:headerViewFrame];
-        [self setBackgroundColor:[[self headerView] backgroundColor]];
-    }
+%hook YTWrapperView
+- (void)setFrame:(CGRect)frame {
+    if (statusBarMode == 3)
+        %orig(CGRectSetY(frame, frame.origin.y + 10));
+    else
+        %orig;
 }
 %end
 %end
@@ -132,7 +145,6 @@
 
 // Picture in Picture
 %group PictureInPicture
-#define keyy(key) CFEqual(string, CFSTR(key))
 extern "C" Boolean MGGetBoolAnswer(CFStringRef);
 %hookf(Boolean, MGGetBoolAnswer, CFStringRef string) {
 	if (keyy("nVh/gwNpy7Jv1NOk00CMrw"))
@@ -177,15 +189,55 @@ extern "C" Boolean MGGetBoolAnswer(CFStringRef);
 %end
 %end
 
+
 static bool appID(NSString *keyString) {
     return [[[NSBundle mainBundle] bundleIdentifier] isEqualToString:keyString];
 }
 
 // Tweak handle
+static void updatePrefs() {
+    @autoreleasepool {
+        NSString *path = @"/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
+        NSString *pathDefault = @"/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        if (![fileManager fileExistsAtPath:path]) {
+            [fileManager copyItemAtPath:pathDefault toPath:path error:nil];
+        }
+        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+        if (prefs) {
+            enabled = boolValueForKey(@"Enabled", prefs);
+            statusBarMode = intValueForKey(@"statusBarMode", prefs);
+            screenMode = intValueForKey(@"screenMode", prefs);
+            bottomInset = intValueForKey(@"bottomInset", prefs);
+            KeyboardHeight = intValueForKey(@"bottomHeightKB", prefs);
+            KeyboardBound = intValueForKey(@"boundKeyboard", prefs);
+            isPIP = boolValueForKey(@"pictureInPicture", prefs);
+            //Keyboard options:
+            isHigherKeyboard = boolValueForKey(@"highKeyboard", prefs);
+            isDarkKeyboard = boolValueForKey(@"darkKeyboard", prefs);
+            isNonLatinKeyboard = boolValueForKey(@"nonLatinKeyboard", prefs);
+            // More options:
+            isCameraBottomSet = boolValueForKey(@"cameraBottomSet", prefs);
+            isCameraUI11 = boolValueForKey(@"cameraUI11", prefs);
+            isCameraZoomFlip11 = boolValueForKey(@"cameraZoomFlip11", prefs);
+            //Per-App Customize
+            NSString const *mainAppID = [NSBundle mainBundle].bundleIdentifier;
+            NSDictionary const *appCustomize = [prefs objectForKey:mainAppID];
+            if (appCustomize) {
+                screenMode = (NSInteger)[[appCustomize objectForKey:@"screenMode"]?:((NSNumber *)[NSNumber numberWithBool:screenMode]) integerValue];
+                bottomInset = (NSInteger)[[appCustomize objectForKey:@"bottomInset"]?:((NSNumber *)[NSNumber numberWithBool:bottomInset]) integerValue];
+                isDarkKeyboard = (BOOL)[[appCustomize objectForKey:@"darkKeyboard"]?:((NSNumber *)[NSNumber numberWithBool:isDarkKeyboard]) boolValue];
+                isHigherKeyboard = (BOOL)[[appCustomize objectForKey:@"highKeyboard"]?:((NSNumber *)[NSNumber numberWithBool:isHigherKeyboard]) boolValue];
+                isNonLatinKeyboard = (BOOL)[[appCustomize objectForKey:@"nonLatinKeyboard"]?:((NSNumber *)[NSNumber numberWithBool:isNonLatinKeyboard]) boolValue];
+            }
+        }
+    }
+}
+
 %ctor {
     @autoreleasepool {
+        %init;
         updatePrefs();
-
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)updatePrefs,
             CFSTR("com.hius.HalFiPadPrefs.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce
@@ -193,6 +245,7 @@ static bool appID(NSString *keyString) {
 
         if (enabled) {
             bool const isApp = [[[[NSProcessInfo processInfo] arguments] objectAtIndex:0] containsString:@"/Application"];
+
             if (isApp) {
                 if (statusBarMode == 3 || statusBarMode == 2) {
                     if (appID(@"com.ss.iphone.ugc.Ame") || appID(@"com.viettel.viettelpay") || appID(@"com.atebits.Tweetie2") || (statusBarMode == 2 && appID(@"com.burbn.instagram")))
@@ -200,14 +253,15 @@ static bool appID(NSString *keyString) {
                     else if (appID(@"com.google.ios.youtube"))
                         %init(FixYouTube);
                     else if (appID(@"com.facebook.Facebook"))
-                        bottomInset += 1;
+                        bottomInset += 5;
                     else if (statusBarMode == 3 && appID(@"com.burbn.instagram"))
                         %init(FixInstagram);
                 }
 
-                if (appID(@"com.atebits.Tweetie2"))
+                if (appID(@"com.atebits.Tweetie2")) {
+                    bottomInset += 2;
                     %init(FixTwitter);
-                else if (appID(@"com.apple.camera")) {
+                } else if (appID(@"com.apple.camera")) {
                     %init(CameraUISet);
                     if (isCameraBottomSet)
                         %init(CameraBottomSet);
@@ -219,7 +273,11 @@ static bool appID(NSString *keyString) {
                 }
             }
 
-            if (isPIP) %init(PictureInPicture);
+            if (@available(iOS 14.0, *)) {
+                isPIP = NO;
+            } else {
+                if (isPIP) %init(PictureInPicture);
+            }
 
             // Keyboard Options
             if (isDarkKeyboard)
@@ -229,8 +287,6 @@ static bool appID(NSString *keyString) {
                 %init(HigherKeyboard);
             else
                 %init(DefaultKeyboard);
-
-            %init;
         }
     }
 }

@@ -9,7 +9,7 @@
 	<integer>1</integer>
 
 	<key>statusBarMode</key>
-	<integer>5</integer>
+	<integer>4</integer>
 
 	<key>ipadDock</key>
 	<false/>
@@ -23,7 +23,7 @@
 	<key>screenMode</key>
 	<integer>1</integer>
 	<key>pictureInPicture</key>
-	<true/>
+	<false/>
 	<key>newSwitcher</key>
 	<false/>
 
@@ -43,7 +43,7 @@
 	<key>ccStatusBar</key>
 	<true/>
 	<key>ccGrabber</key>
-	<false/>
+	<true/>
 	<key>homeBarAutoHide</key>
 	<false/>
 	<key>edgeProtect</key>
@@ -54,7 +54,7 @@
 	<key>homeBarLS</key>
 	<false/>
 	<key>homeBarCustom</key>
-	<true/>
+	<false/>
 	<key>homeBarWidth</key>
 	<integer>134</integer>
 	<key>homeBarHeight</key>
@@ -76,7 +76,7 @@
 	<key>screenRound</key>
 	<integer>0</integer>
 	<key>roundAppDock</key>
-	<integer>6</integer>
+	<integer>5</integer>
 
 	<key>nonLatinKeyboard</key>
 	<false/>
@@ -96,9 +96,9 @@
 	<key>moreIconDock</key>
 	<false/>
 	<key>noDockBackground</key>
-	<false/>
-	<key>noIconsFly</key>
 	<true/>
+	<key>noIconsFly</key>
+	<false/>
 	<key>fastOpenApp</key>
 	<false/>
 

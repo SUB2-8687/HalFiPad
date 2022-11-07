@@ -1,4 +1,5 @@
-#import "HeaderListPrefs.h"
+#import <Preferences/PSSpecifier.h>
+#import <Preferences/PSListController.h>
 
 @interface PSListController (hideOption)
 -(BOOL)containsSpecifier:(id)arg1;

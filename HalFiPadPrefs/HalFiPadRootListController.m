@@ -123,23 +123,6 @@
     }];
 }
 
-- (void)respringPrompt {
-	UIAlertController *respringAlert = [UIAlertController alertControllerWithTitle:@"HalFiPad"
-	message:@"Do you want to Respring?"
-	preferredStyle:UIAlertControllerStyleActionSheet];
-
-	UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
-		[self respring];
-	}];
-
-	UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"No" style:UIAlertActionStyleCancel handler:nil];
-
-	[respringAlert addAction:confirmAction];
-	[respringAlert addAction:cancelAction];
-
-	[self presentViewController:respringAlert animated:YES completion:nil];
-}
-
 -(void)resetSetting {
     if([[NSFileManager defaultManager] removeItemAtPath:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" error: nil]) {
         [self respring];

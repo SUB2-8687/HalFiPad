@@ -6,6 +6,33 @@
         <array>
             <dict>
                 <key>label</key>
+                <string>◦ App Switcher / Dock Round Corner</string>
+                <key>cell</key>
+                <string>PSGroupCell</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSSliderCell</string>
+                <key>isSegmented</key>
+                <true/>
+                <key>default</key>
+                <real>5</real>
+                <key>max</key>
+                <real>30</real>
+                <key>min</key>
+                <integer>5</integer>
+                <key>showValue</key>
+                <true/>
+                <key>defaults</key>
+                <string>com.hius.HalFiPadPrefs</string>
+                <key>key</key>
+                <string>roundAppDock</string>
+                <key>PostNotification</key>
+                <string>com.hius.HalFiPadPrefs.settingschanged</string>
+            </dict>
+
+            <dict>
+                <key>label</key>
                 <string>◦ Bottom Inset In-App</string>
                 <key>cell</key>
                 <string>PSGroupCell</string>
@@ -30,43 +57,10 @@
                 <key>PostNotification</key>
                 <string>com.hius.HalFiPadPrefs.settingschanged</string>
             </dict>
+            
             <dict>
                 <key>label</key>
-                <string>▽ Rounded Corners ▽</string>
-                <key>cell</key>
-                <string>PSGroupCell</string>
-            </dict>
-            <dict>
-                <key>label</key>
-                <string>◦ App Switcher / Dock</string>
-                <key>cell</key>
-                <string>PSGroupCell</string>
-                <key>footerText</key>
-                <string>5.0: Disable</string>
-            </dict>
-            <dict>
-                <key>cell</key>
-                <string>PSSliderCell</string>
-                <key>isSegmented</key>
-                <true/>
-                <key>default</key>
-                <real>6</real>
-                <key>max</key>
-                <real>30</real>
-                <key>min</key>
-                <integer>5</integer>
-                <key>showValue</key>
-                <true/>
-                <key>defaults</key>
-                <string>com.hius.HalFiPadPrefs</string>
-                <key>key</key>
-                <string>roundAppDock</string>
-                <key>PostNotification</key>
-                <string>com.hius.HalFiPadPrefs.settingschanged</string>
-            </dict>
-            <dict>
-                <key>label</key>
-                <string>◦ Screen Display</string>
+                <string>◦ Screen Display Round Corner</string>
                 <key>cell</key>
                 <string>PSGroupCell</string>
                 <key>footerText</key>

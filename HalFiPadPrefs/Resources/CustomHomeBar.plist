@@ -36,7 +36,7 @@
                 <key>cellClass</key>
                 <string>HalFiPadSwitchCell</string>
                 <key>label</key>
-                <string>◦ On Lockscreen</string>
+                <string>◦ Lockscreen</string>
                 <key>key</key>
                 <string>homeBarLS</string>
                 <key>defaults</key>
