@@ -1,6 +1,7 @@
 FINALPACKAGE = 1
 
-export TARGET = iphone:latest:14.0
+export TARGET = iphone:14.4
+export SYSROOT = $(THEOS)/sdks/iPhoneOS14.4.sdk
 export ADDITIONAL_CFLAGS = -DTHEOS_LEAN_AND_MEAN -fobjc-arc
 
 include $(THEOS)/makefiles/common.mk

@@ -89,17 +89,35 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
-				<integer>5</integer>
 			</array>
 			<key>validTitles</key>
 			<array>
 				<string>Original</string>
 				<string>iPad</string>
 				<string>iPad Extra</string>
-				<string>iPhoneX</string>
-				<string>iPhoneX*</string>
-				<string>iPhone11*</string>
+				<string>iPhone 11</string>
+				<string>iPhone 13 PM</string>
 			</array>
+			<key>PostNotification</key>
+			<string>com.hius.HalFiPadPrefs.settingschanged</string>
+		</dict>
+
+		<!-- Settings -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<dict>
+			<key>cellClass</key>
+  			<string>HalFiPadSwitchCell</string>
+			<key>label</key>
+			<string>◦ Reduce status bar height</string>
+			<key>key</key>
+			<string>reduceHeightEnabled</string>
+			<key>defaults</key>
+			<string>com.hius.HalFiPadPrefs</string>
+			<key>default</key>
+			<true/>
 			<key>PostNotification</key>
 			<string>com.hius.HalFiPadPrefs.settingschanged</string>
 		</dict>

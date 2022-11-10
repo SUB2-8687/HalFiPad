@@ -1,4 +1,4 @@
-#import "HeaderListPrefs.h"
+#import "LumiHeaderListPrefs.h"
 
 @interface InsetListPrefs : PSListController
 @end

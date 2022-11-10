@@ -1,4 +1,4 @@
-#import "HeaderListPrefs.h"
+#import "LumiHeaderListPrefs.h"
 #import <Preferences/PSControlTableCell.h>
 #import <Preferences/PSEditableTableCell.h>
 

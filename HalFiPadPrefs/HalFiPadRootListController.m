@@ -90,7 +90,7 @@
     [welcomeController addBulletedListItemWithTitle:@"Convenient" description:@"Built to fulfill its purpose easily." image:[UIImage systemImageNamed:@"tray.full.fill"]];
     [welcomeController addBulletedListItemWithTitle:@"Optimized" description:@"Lightweight and less battery drain." image:[UIImage systemImageNamed:@"battery.100"]];
     [welcomeController addBulletedListItemWithTitle:@"Open Source" description:@"HalFiPad is open source. Enjoy it!" image:[UIImage systemImageNamed:@"chevron.left.slash.chevron.right"]];
-    [welcomeController.buttonTray addCaptionText:@"Made by Hius."];
+    [welcomeController.buttonTray addCaptionText:@"Made by Hius, Rework by Lumi."];
 
     OBBoldTrayButton* continueButton = [OBBoldTrayButton buttonWithType:1];
     [continueButton addTarget:self action:@selector(dismissWelcomeController) forControlEvents:UIControlEventTouchUpInside];
@@ -179,6 +179,7 @@
         [[self enableSwitch] setOn:YES animated:YES];
     else
         [[self enableSwitch] setOn:NO animated:YES];
+
 }
 
 -(void)dismissWelcomeController {

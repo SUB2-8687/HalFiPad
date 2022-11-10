@@ -26,6 +26,9 @@ NSInteger batteryColorMode, gesturesMode;
 BOOL isiPadDock, isInAppDock, isRecentApp;
 BOOL isiPadMultitask, isNewGridSwitcher;
 
+//Lumi
+BOOL reduceHeightEnabled;
+
 //General
 BOOL isEdgeProtect, isHomeBarAutoHide, isHomeBarSB, isHomeBarLS, isHomeBarCustom;
 BOOL isCCStatusbar, isCCGrabber, isCCAnimation, isNoBreadcrumb;
@@ -203,8 +206,8 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 %group iPhoneStatusBar
 %hook _UIStatusBarVisualProvider_iOS
 + (Class)class {
-    if (statusBarMode == 5) return NSClassFromString(@"_UIStatusBarVisualProvider_Split61");
-    return NSClassFromString(@"_UIStatusBarVisualProvider_Split58");
+    if (statusBarMode == 3) return NSClassFromString(@"_UIStatusBarVisualProvider_Split828");
+    return NSClassFromString(@"_UIStatusBarVisualProvider_Split1170");
 }
 %end
 %end
@@ -219,23 +222,25 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 %end
 %end
 
-// Fix StatusBar X
-%group StatusBarXFix
+// Split 1170 Calibrate
+%group StatusBarCalibrate1170
+
+// Fix StatusBar X icon padding
 %hook SBIconListGridLayoutConfiguration
 - (UIEdgeInsets)portraitLayoutInsets {
     UIEdgeInsets const x = %orig;
     NSUInteger const rows = MSHookIvar<NSUInteger>(self, "_numberOfPortraitRows");
     if (rows <= 3) return %orig;
-    return UIEdgeInsetsMake(x.top + 12, x.left, x.bottom, x.right);
+    return UIEdgeInsetsMake(x.top + 10, x.left, x.bottom, x.right);
 }
 %end
-%end
 
-// Split 58 Calibrate
-%group StatusBarCalibrate58
-%hook _UIStatusBarVisualProvider_Split58
+%hook _UIStatusBarVisualProvider_Split828
 +(double)height {
-    return 20;
+    if(reduceHeightEnabled) {
+        return 24;
+    }
+    return 36;
 }
 
 +(CGSize)notchSize{
@@ -244,16 +249,55 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    return CGSizeMake(48, 18);
+    if(reduceHeightEnabled) {
+        return CGSizeMake(24, 18);
+    }
+    return CGSizeMake(36, 18);
 }
-%end
+
+-(double)leadingItemSpacing {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
+-(double)lowerExpandedBaselineOffset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
++(double)leadingCenteringEdgeInset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
++(double)leadingCenteringOffset {
+    if(statusBarMode == 4) {
+        return 15;
+    }
+    return 10;
+}
+
+-(double)bottomLeadingTopOffset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
 %end
 
-// Split 61 Calibrate
-%group StatusBarCalibrate61
-%hook _UIStatusBarVisualProvider_Split61
+%hook _UIStatusBarVisualProvider_Split1170
 +(double)height {
-    return 20;
+    if(reduceHeightEnabled) {
+        return 24;
+    }
+    return 35;
 }
 
 +(CGSize)notchSize{
@@ -262,8 +306,47 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    return CGSizeMake(48, 18);
+    if(reduceHeightEnabled) {
+        return CGSizeMake(24, 18);
+    }
+    return CGSizeMake(36, 18);
 }
+
+-(double)leadingItemSpacing {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
+-(double)lowerExpandedBaselineOffset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
++(double)leadingCenteringEdgeInset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
++(double)leadingCenteringOffset {
+    if(statusBarMode == 4) {
+        return 15;
+    }
+    return 10;
+}
+
+-(double)bottomLeadingTopOffset {
+    if(reduceHeightEnabled) {
+        return 10;
+    }
+    return 1;
+}
+
 %end
 %end
 
@@ -835,97 +918,6 @@ int applicationDidFinishLaunching;
 %end
 %end
 
-// PadLock for iOS 13
-%group PadLockiOS13
-@interface WGWidgetGroupViewController : UIViewController
-@end
-
-@interface SBDashBoardMesaUnlockBehaviorConfiguration : NSObject
-- (BOOL)_isAccessibilityRestingUnlockPreferenceEnabled;
-@end
-
-@interface SBDashBoardBiometricUnlockController : NSObject
-@end
-
-@interface SBLockScreenManager : NSObject
-+ (id)sharedInstance;
-- (BOOL)_finishUIUnlockFromSource:(int)arg1 withOptions:(id)arg2;
-@end
-
-static CGFloat offset = 0;
-
-%hook SBFLockScreenDateView
--(id)initWithFrame:(CGRect)arg1 {
-    CGFloat const screenWidth = UIScreen.mainScreen.bounds.size.width;
-	if (screenWidth <= 320) {
-		offset = 20;
-	} else if (screenWidth <= 375) {
-		offset = 35;
-	} else if (screenWidth <= 414) {
-		offset = 28;
-	}
-    return %orig;
-}
-
--(void)layoutSubviews {
-	%orig;
-	UIView* timeView = MSHookIvar<UIView*>(self, "_timeLabel");
-	UIView* dateSubtitleView = MSHookIvar<UIView*>(self, "_dateSubtitleView");
-	UIView* customSubtitleView = MSHookIvar<UIView*>(self, "_customSubtitleView");
-	[timeView setFrame:CGRectSetY(timeView.frame, timeView.frame.origin.y + offset)];
-	[dateSubtitleView setFrame:CGRectSetY(dateSubtitleView.frame, dateSubtitleView.frame.origin.y + offset)];
-	[customSubtitleView setFrame:CGRectSetY(customSubtitleView.frame, customSubtitleView.frame.origin.y + offset)];
-}
-%end
-
-%hook SBDashBoardLockScreenEnvironment
--(void)handleBiometricEvent:(NSInteger)arg1 {
-	%orig;
-	if (arg1 == 4) {
-		SBDashBoardBiometricUnlockController* biometricUnlockController = MSHookIvar<SBDashBoardBiometricUnlockController*>(self, "_biometricUnlockController");
-		SBDashBoardMesaUnlockBehaviorConfiguration* unlockBehavior = MSHookIvar<SBDashBoardMesaUnlockBehaviorConfiguration*>(biometricUnlockController, "_biometricUnlockBehaviorConfiguration");
-		if ([unlockBehavior _isAccessibilityRestingUnlockPreferenceEnabled]) {
-			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-				[[%c(SBLockScreenManager) sharedInstance] _finishUIUnlockFromSource:12 withOptions:nil];
-			});
-		}
-	}
-}
-%end
-
-%hook BSUICAPackageView
-- (id)initWithPackageName:(id)arg1 inBundle:(id)arg2 {
-	if (![arg1 hasPrefix:@"lock"]) return %orig;
-	NSString* packageName = [arg1 stringByAppendingString:@"-896h"];
-	return %orig(packageName, [NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/SpringBoardUIServices.framework"]);
-}
-%end
-
-%hook CSCombinedListViewController
--(UIEdgeInsets)_listViewDefaultContentInsets {
-    UIEdgeInsets orig = %orig;
-    orig.top += offset;
-    return orig;
-}
-%end
-
-%hook WGWidgetGroupViewController
--(void)updateViewConstraints {
-    %orig;
-	[self.view setFrame:CGRectSetY(self.view.frame, self.view.frame.origin.y + (offset/2))];
-}
-%end
-
-%hook SBUIBiometricResource
--(id)init {
-	id r = %orig;
-	MSHookIvar<BOOL>(r, "_hasMesaHardware") = NO;
-	MSHookIvar<BOOL>(r, "_hasPearlHardware") = YES;
-	return r;
-}
-%end
-%end
-
 //PadLock for iOS 14
 %group PadLockiOS14
 %hook UIMorphingLabel
@@ -986,35 +978,13 @@ static CGFloat offset = 0;
 }
 %end
 
-%hook SBUICallToActionLabel
+%hook _UIPageControlIndicatorContentView
 -(id)initWithFrame:(struct CGRect)arg1 {
 	return nil;
 }
 %end
-%end
 
-%group MakeSBClean13
-// NoWidgetFooter
-@interface WGWidgetAttributionView
-@property (nonatomic, assign, readwrite, getter=isHidden) BOOL hidden;
-@end
-
-%hook WGWidgetAttributionView
--(void)didMoveToWindow {
-    %orig;
-    self.hidden = YES;
-}
-%end
-
-%hook SBIconListPageControl
-- (id)initWithFrame:(struct CGRect)arg1 {
-	return nil;
-}
-%end
-%end
-
-%group MakeSBClean14
-%hook _UIPageControlIndicatorContentView
+%hook SBUICallToActionLabel
 -(id)initWithFrame:(struct CGRect)arg1 {
 	return nil;
 }
@@ -1041,6 +1011,7 @@ static void updatePrefs() {
             HomeBarWidth = intValueForKey(@"homeBarWidth", prefs);
             HomeBarHeight = intValueForKey(@"homeBarHeight", prefs);
             HomeBarRadius = intValueForKey(@"homeBarRadius", prefs);
+            reduceHeightEnabled = intValueForKey(@"reduceHeightEnabled", prefs);
             //iPad features:
             isiPadDock = boolValueForKey(@"ipadDock", prefs);
             isiPadMultitask = boolValueForKey(@"iPadMultitask", prefs);
@@ -1101,16 +1072,9 @@ static void updatePrefs() {
                     %init(iPadStatusBar);
                 } else {
                     %init(iPhoneStatusBar);
-                    if (statusBarMode == 5) {
-                        if(@available(iOS 14.0, *))
-                            statusBarMode = 4;
-                        else
-                            %init(StatusBarCalibrate61);
-                    }
-                    if (statusBarMode == 4)
-                        %init(StatusBarCalibrate58);
-                    else
-                        %init(StatusBarXFix);
+                    if (statusBarMode == 3 || statusBarMode == 4) {
+                        %init(StatusBarCalibrate1170);
+					}
                 }
             } else {
                 %init(LegacyStatusBar);
@@ -1122,9 +1086,7 @@ static void updatePrefs() {
                 if (gesturesMode == 4) {
                     %init(MiniatureGesture);
                 } else {
-                    if(@available(iOS 14.0, *)) {
-                        %init(FixiOS14);
-                    }
+                    %init(FixiOS14);
                 }
             } else {
                 %init(FixCC134);
@@ -1147,11 +1109,7 @@ static void updatePrefs() {
             if (!isiPXCombination) %init(OriginalButtons);
 
             if (isPadLock) {
-                if (@available(iOS 14.0, *)) {
-                    %init(PadLockiOS14);
-                } else {
-                    %init(PadLockiOS13);
-                }
+                %init(PadLockiOS14);
             }
 
             // Round Corner
@@ -1160,10 +1118,6 @@ static void updatePrefs() {
             // More options
             if (isMakeSBClean) {
                 %init(MakeSBClean);
-                if (@available(iOS 14.0, *))
-                    %init(MakeSBClean14);
-                else
-                    %init(MakeSBClean13);
             }
 
             if (isMoreIconDock) %init(MoreIconDock);
