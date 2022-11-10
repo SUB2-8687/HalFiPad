@@ -256,10 +256,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 -(double)leadingItemSpacing {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 -(double)lowerExpandedBaselineOffset {
@@ -313,10 +310,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 -(double)leadingItemSpacing {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 -(double)lowerExpandedBaselineOffset {
