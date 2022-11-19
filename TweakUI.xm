@@ -8,6 +8,9 @@ NSInteger KeyboardHeight = 46, KeyboardBound = -18;
 //Keyboard options
 BOOL isHigherKeyboard, isDarkKeyboard, isNonLatinKeyboard;
 
+//Lumi
+NSInteger lumiStatusBarHeight;
+
 //Camera Options
 BOOL isCameraBottomSet, isCameraUI11, isCameraZoomFlip11;
 
@@ -78,9 +81,9 @@ BOOL isPIP;
 %hook YTSearchView
 - (void)setFrame:(CGRect)frame {
     if (statusBarMode == 3 || statusBarMode == 4)
-        %orig(CGRectSetY(frame, lumiStatusBarHeight));
+        %orig(CGRectSetY(frame, frame.origin.y + lumiStatusBarHeight/4));
     else
-        %orig(CGRectSetY(frame, 20));
+        %orig;
 }
 %end
 
@@ -212,6 +215,7 @@ static void updatePrefs() {
             KeyboardHeight = intValueForKey(@"bottomHeightKB", prefs);
             KeyboardBound = intValueForKey(@"boundKeyboard", prefs);
             isPIP = boolValueForKey(@"pictureInPicture", prefs);
+            lumiStatusBarHeight = intValueForKey(@"lumiStatusBarHeight", prefs);
             //Keyboard options:
             isHigherKeyboard = boolValueForKey(@"highKeyboard", prefs);
             isDarkKeyboard = boolValueForKey(@"darkKeyboard", prefs);
@@ -247,14 +251,14 @@ static void updatePrefs() {
             bool const isApp = [[[[NSProcessInfo processInfo] arguments] objectAtIndex:0] containsString:@"/Application"];
 
             if (isApp) {
-                if (statusBarMode == 3 || statusBarMode == 2) {
+                if (statusBarMode == 4 || statusBarMode == 3 || statusBarMode == 2) {
                     if (appID(@"com.ss.iphone.ugc.Ame") || appID(@"com.viettel.viettelpay") || appID(@"com.atebits.Tweetie2") || (statusBarMode == 2 && appID(@"com.burbn.instagram")))
                         %init(FixStatusBarInApp);
                     else if (appID(@"com.google.ios.youtube"))
                         %init(FixYouTube);
                     else if (appID(@"com.facebook.Facebook"))
                         bottomInset += 5;
-                    else if (statusBarMode == 3 && appID(@"com.burbn.instagram"))
+                    else if (appID(@"com.burbn.instagram"))
                         %init(FixInstagram);
                 }
 

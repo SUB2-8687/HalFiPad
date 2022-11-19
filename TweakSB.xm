@@ -233,10 +233,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
     if (rows <= 3) return %orig;
 
     if(statusBarMode == 3 || statusBarMode == 4) {
-        if(20 <= lumiStatusBarHeight <= 40) {
-            return UIEdgeInsetsMake(x.top + lumiStatusBarHeight/4, x.left, x.bottom, x.right);
-        }
-        return UIEdgeInsetsMake(x.top, x.left, x.bottom, x.right);
+        return UIEdgeInsetsMake(x.top + lumiStatusBarHeight/4, x.left, x.bottom, x.right);
     }
     if(statusBarMode == 2) {
         return UIEdgeInsetsMake(x.top + 2, x.left, x.bottom, x.right);
