@@ -27,7 +27,7 @@ BOOL isiPadDock, isInAppDock, isRecentApp;
 BOOL isiPadMultitask, isNewGridSwitcher;
 
 //Lumi
-BOOL reduceHeightEnabled;
+NSInteger lumiStatusBarHeight;
 
 //General
 BOOL isEdgeProtect, isHomeBarAutoHide, isHomeBarSB, isHomeBarLS, isHomeBarCustom;
@@ -231,16 +231,23 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
     UIEdgeInsets const x = %orig;
     NSUInteger const rows = MSHookIvar<NSUInteger>(self, "_numberOfPortraitRows");
     if (rows <= 3) return %orig;
-    return UIEdgeInsetsMake(x.top + 10, x.left, x.bottom, x.right);
+
+    if(statusBarMode == 3 || statusBarMode == 4) {
+        if(20 <= lumiStatusBarHeight <= 40) {
+            return UIEdgeInsetsMake(x.top + lumiStatusBarHeight/4, x.left, x.bottom, x.right);
+        }
+        return UIEdgeInsetsMake(x.top, x.left, x.bottom, x.right);
+    }
+    if(statusBarMode == 2) {
+        return UIEdgeInsetsMake(x.top + 2, x.left, x.bottom, x.right);
+    }
+    return UIEdgeInsetsMake(x.top, x.left, x.bottom, x.right);
 }
 %end
 
 %hook _UIStatusBarVisualProvider_Split828
 +(double)height {
-    if(reduceHeightEnabled) {
-        return 24;
-    }
-    return 36;
+    return lumiStatusBarHeight;
 }
 
 +(CGSize)notchSize{
@@ -249,10 +256,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    if(reduceHeightEnabled) {
-        return CGSizeMake(24, 18);
-    }
-    return CGSizeMake(36, 18);
+    return CGSizeMake(lumiStatusBarHeight, 18);
 }
 
 -(double)leadingItemSpacing {
@@ -260,17 +264,11 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 -(double)lowerExpandedBaselineOffset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 +(double)leadingCenteringEdgeInset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 +(double)leadingCenteringOffset {
@@ -281,20 +279,14 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 -(double)bottomLeadingTopOffset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 %end
 
 %hook _UIStatusBarVisualProvider_Split1170
 +(double)height {
-    if(reduceHeightEnabled) {
-        return 24;
-    }
-    return 35;
+    return lumiStatusBarHeight;
 }
 
 +(CGSize)notchSize{
@@ -303,10 +295,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    if(reduceHeightEnabled) {
-        return CGSizeMake(24, 18);
-    }
-    return CGSizeMake(36, 18);
+    return CGSizeMake(lumiStatusBarHeight, 18);
 }
 
 -(double)leadingItemSpacing {
@@ -314,31 +303,22 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 -(double)lowerExpandedBaselineOffset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 +(double)leadingCenteringEdgeInset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 +(double)leadingCenteringOffset {
     if(statusBarMode == 4) {
-        return 15;
+        return 16;
     }
     return 10;
 }
 
 -(double)bottomLeadingTopOffset {
-    if(reduceHeightEnabled) {
-        return 10;
-    }
-    return 1;
+    return 2;
 }
 
 %end
@@ -406,10 +386,8 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
             %orig(CGRectSetY(frame, -20));
         else if (statusBarMode == 0)
             %orig(CGRectSetY(frame, -42));
-        else if (statusBarMode == 3)
+        else if (statusBarMode == 3 || statusBarMode == 4)
             %orig;
-        else
-            %orig(CGRectSetY(frame, -24));
     }
     %orig;
 }
@@ -1005,7 +983,7 @@ static void updatePrefs() {
             HomeBarWidth = intValueForKey(@"homeBarWidth", prefs);
             HomeBarHeight = intValueForKey(@"homeBarHeight", prefs);
             HomeBarRadius = intValueForKey(@"homeBarRadius", prefs);
-            reduceHeightEnabled = intValueForKey(@"reduceHeightEnabled", prefs);
+            lumiStatusBarHeight = intValueForKey(@"lumiStatusBarHeight", prefs);
             //iPad features:
             isiPadDock = boolValueForKey(@"ipadDock", prefs);
             isiPadMultitask = boolValueForKey(@"iPadMultitask", prefs);

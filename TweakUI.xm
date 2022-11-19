@@ -49,7 +49,7 @@ BOOL isPIP;
 %group FixTwitter
 %hook TFNNavigationBarOverlayView
 - (void)setFrame:(CGRect)frame {
-    if (statusBarMode == 3) {
+    if (statusBarMode == 3 || statusBarMode == 4) {
         %orig(CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height + 6));
     } else {
         %orig;
@@ -77,8 +77,8 @@ BOOL isPIP;
 
 %hook YTSearchView
 - (void)setFrame:(CGRect)frame {
-    if (statusBarMode == 3)
-        %orig(CGRectSetY(frame, 40));
+    if (statusBarMode == 3 || statusBarMode == 4)
+        %orig(CGRectSetY(frame, lumiStatusBarHeight));
     else
         %orig(CGRectSetY(frame, 20));
 }
@@ -86,7 +86,7 @@ BOOL isPIP;
 
 %hook YTWrapperView
 - (void)setFrame:(CGRect)frame {
-    if (statusBarMode == 3)
+    if (statusBarMode == 3 || statusBarMode == 4)
         %orig(CGRectSetY(frame, frame.origin.y + 10));
     else
         %orig;
