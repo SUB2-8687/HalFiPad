@@ -23,7 +23,7 @@
 
         self.iconView = [[UIImageView alloc] initWithFrame:CGRectMake(0,0,10,10)];
         self.iconView.contentMode = UIViewContentModeScaleAspectFit;
-        self.iconView.image = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HalFiPadPrefs.bundle/icon@2x.png"];
+        self.iconView.image = [UIImage imageWithContentsOfFile:@"/var/jb/Library/PreferenceBundles/HalFiPadPrefs.bundle/icon@2x.png"];
         self.iconView.translatesAutoresizingMaskIntoConstraints = NO;
         self.iconView.alpha = 0.0;
         [self.navigationItem.titleView addSubview:self.iconView];
@@ -44,7 +44,7 @@
 }
 
 - (void)toggleState {
-    NSDictionary *settings = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSDictionary *settings = [NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
 
     if (![settings[@"Enabled"] boolValue]) {
         [settings setValue:[NSNumber numberWithBool:YES] forKey:@"Enabled"];
@@ -52,7 +52,7 @@
         [settings setValue:[NSNumber numberWithBool:NO] forKey:@"Enabled"];
     }
 
-    if ([settings writeToFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES]) {
+    if ([settings writeToFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES]) {
         [self respring];
     }
 }
@@ -71,7 +71,7 @@
     NSMutableArray *specifiers = [NSMutableArray array];
     PSSpecifier* groupSpecifier = [
         PSSpecifier 
-        preferenceSpecifierNamed:@"▷ Per-App Customization"
+        preferenceSpecifierNamed:@"▷ 앱별 사용자 설정"
         target:self
         set:nil
         get:@selector(getIsWidgetSetForSpecifier:)
@@ -84,19 +84,19 @@
 }
 
 -(void)setupWelcomeController {
-    welcomeController = [[OBWelcomeController alloc] initWithTitle:@"Welcome to HalFiPad" detailText:@"Bring modern gestures and many unique features to your device." icon:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HalFiPadPrefs.bundle/icon.png"]];
+    welcomeController = [[OBWelcomeController alloc] initWithTitle:@"HalFiPad에 오신 것을 환영합니다" detailText:@"귀하의 기기에 현대적인 제스처와 다양한 고유 기능을 추가하세요." icon:[UIImage imageWithContentsOfFile:@"/var/jb/Library/PreferenceBundles/HalFiPadPrefs.bundle/icon.png"]];
 
-    [welcomeController addBulletedListItemWithTitle:@"Support" description:@"Applications and tweaks are fully supported." image:[UIImage systemImageNamed:@"rectangle.3.offgrid"]];
-    [welcomeController addBulletedListItemWithTitle:@"Convenient" description:@"Built to fulfill its purpose easily." image:[UIImage systemImageNamed:@"tray.full.fill"]];
-    [welcomeController addBulletedListItemWithTitle:@"Optimized" description:@"Lightweight and less battery drain." image:[UIImage systemImageNamed:@"battery.100"]];
-    [welcomeController addBulletedListItemWithTitle:@"Open Source" description:@"HalFiPad is open source. Enjoy it!" image:[UIImage systemImageNamed:@"chevron.left.slash.chevron.right"]];
-    [welcomeController.buttonTray addCaptionText:@"Made by Hius, Rework by Lumi."];
+    [welcomeController addBulletedListItemWithTitle:@"지원" description:@"응용 프로그램 및 트윅이 완벽하게 지원됩니다." image:[UIImage systemImageNamed:@"rectangle.3.offgrid"]];
+    [welcomeController addBulletedListItemWithTitle:@"편리함" description:@"목적을 쉽게 달성할 수 있도록 제작되었습니다." image:[UIImage systemImageNamed:@"tray.full.fill"]];
+    [welcomeController addBulletedListItemWithTitle:@"최적화" description:@"가볍고 배터리 소모도 적습니다." image:[UIImage systemImageNamed:@"battery.100"]];
+    [welcomeController addBulletedListItemWithTitle:@"오픈 소스" description:@"HalFiPad는 오픈 소스입니다. 즐겨보세요!" image:[UIImage systemImageNamed:@"chevron.left.slash.chevron.right"]];
+    [welcomeController.buttonTray addCaptionText:@"Made by Hius."];
 
     OBBoldTrayButton* continueButton = [OBBoldTrayButton buttonWithType:1];
     [continueButton addTarget:self action:@selector(dismissWelcomeController) forControlEvents:UIControlEventTouchUpInside];
-    [continueButton setTitle:@"Let's Go" forState:UIControlStateNormal];
+    [continueButton setTitle:@"시작하기" forState:UIControlStateNormal];
     [continueButton setClipsToBounds:YES];
-    [continueButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [continueButton setTitleColor:[UIColor colorWithRed: 0.45 green: 0.78 blue: 1.0 alpha: 1.0] forState:UIControlStateNormal];
     [continueButton.layer setCornerRadius:15];
     [welcomeController.buttonTray addButton:continueButton];
 
@@ -124,21 +124,21 @@
 }
 
 -(void)resetSetting {
-    if([[NSFileManager defaultManager] removeItemAtPath:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" error: nil]) {
+    if([[NSFileManager defaultManager] removeItemAtPath:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" error: nil]) {
         [self respring];
     }
 }
 
 - (void)resetPrompt {
 	UIAlertController *respringAlert = [UIAlertController alertControllerWithTitle:@"HalFiPad"
-	message:@"Do you want to Reset?"
+	message:@"재설정하시겠습니까?"
 	preferredStyle:UIAlertControllerStyleActionSheet];
 
-	UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+	UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"예" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
 		[self resetSetting];
 	}];
 
-	UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"No" style:UIAlertActionStyleCancel handler:nil];
+	UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"아니요" style:UIAlertActionStyleCancel handler:nil];
 
 	[respringAlert addAction:confirmAction];
 	[respringAlert addAction:cancelAction];
@@ -168,13 +168,13 @@
 	[super viewDidLoad];
 
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"]];
+	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"]];
 	NSNumber *didShowOBWelcomeController = [settings valueForKey:@"didShowOBWelcomeController"] ?: @0;
 	if([didShowOBWelcomeController isEqual:@0]){
 		[self setupWelcomeController];
 	}
 
-    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
     if ([prefs[@"Enabled"] boolValue])
         [[self enableSwitch] setOn:YES animated:YES];
     else
@@ -184,21 +184,21 @@
 
 -(void)dismissWelcomeController {
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"]];
+	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"]];
 	[settings setObject:@1 forKey:@"didShowOBWelcomeController"];
-	[settings writeToFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
+	[settings writeToFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
 	[welcomeController dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (id)readPreferenceValue:(PSSpecifier*)specifier {
-    NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+    NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
     [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
     return (settings[specifier.properties[@"key"]]) ?: specifier.properties[@"default"];
 }
 
 - (void)setPreferenceValue:(id)value specifier:(PSSpecifier*)specifier {
-    NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+    NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
     [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
     [settings setObject:value forKey:specifier.properties[@"key"]];

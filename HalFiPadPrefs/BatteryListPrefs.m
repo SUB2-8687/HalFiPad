@@ -1,4 +1,4 @@
-#import "LumiHeaderListPrefs.h"
+#import "HeaderListPrefs.h"
 #import <Preferences/PSControlTableCell.h>
 #import <Preferences/PSEditableTableCell.h>
 
@@ -26,7 +26,7 @@
 }
 
 - (void)toggleState {
-    NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
 
     if (![settings[@"batteryPercent"] boolValue]) {
         [self toggleCellState:YES];
@@ -35,7 +35,7 @@
         [self toggleCellState:NO];
         [settings setValue:[NSNumber numberWithBool:NO] forKey:@"batteryPercent"];
     }
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
+    [settings writeToFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
 }
 
 - (void)toggleCellState:(BOOL)enable {
@@ -78,7 +78,7 @@
 -(void)viewDidLoad {
 	[super viewDidLoad];
 
-    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
 
     if ([prefs[@"batteryPercent"] boolValue]) {
         [self toggleCellState:YES];
@@ -88,11 +88,11 @@
         [[self enableSwitch] setOn:NO animated:YES];
     }
 
-    NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
 
     if ([settings[@"percentChargingCC"] boolValue]) {
         [settings setValue:[NSNumber numberWithBool:NO] forKey:@"hideStockPercent"];
-        [settings writeToFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
+        [settings writeToFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist" atomically:YES];
     }
 }
 
@@ -105,14 +105,14 @@
 }
 
 - (id)readPreferenceValue:(PSSpecifier*)specifier {
-    NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+    NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
     [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
     return (settings[specifier.properties[@"key"]]) ?: specifier.properties[@"default"];
 }
 
 - (void)setPreferenceValue:(id)value specifier:(PSSpecifier*)specifier {
-    NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+    NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
     [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
     [settings setObject:value forKey:specifier.properties[@"key"]];

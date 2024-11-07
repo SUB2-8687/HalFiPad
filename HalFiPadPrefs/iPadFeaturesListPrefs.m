@@ -30,7 +30,7 @@
 -(void)viewDidLoad {
 	[super viewDidLoad];
 
-    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
     if(![prefs[@"ipadDock"] boolValue]) {
         [self removeContiguousSpecifiers:@[self.savedSpecifiers[@"InAppID"]] animated:YES];
         [self removeContiguousSpecifiers:@[self.savedSpecifiers[@"RecentAppID"]] animated:YES];
@@ -40,7 +40,7 @@
 
 -(void)reloadSpecifiers {
     [super reloadSpecifiers];
-    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
     if(![prefs[@"ipadDock"] boolValue]) {
         [self removeContiguousSpecifiers:@[self.savedSpecifiers[@"InAppID"]] animated:NO];
         [self removeContiguousSpecifiers:@[self.savedSpecifiers[@"RecentAppID"]] animated:NO];
@@ -49,14 +49,14 @@
 }
 
 - (id)readPreferenceValue:(PSSpecifier*)specifier {
-	NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+	NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
 	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
 	return (settings[specifier.properties[@"key"]]) ?: specifier.properties[@"default"];
 }
 
 - (void)setPreferenceValue:(id)value specifier:(PSSpecifier*)specifier {
-	NSString *path = [NSString stringWithFormat:@"/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
+	NSString *path = [NSString stringWithFormat:@"/var/jb/User/Library/Preferences/%@.plist", specifier.properties[@"defaults"]];
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
 	[settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:path]];
 	[settings setObject:value forKey:specifier.properties[@"key"]];
