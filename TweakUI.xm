@@ -9,7 +9,7 @@ NSInteger KeyboardHeight = 46, KeyboardBound = -18;
 BOOL isHigherKeyboard, isDarkKeyboard, isNonLatinKeyboard;
 
 //Lumi
-NSInteger lumiStatusBarHeight;
+NSInteger StatusBarHeight;
 
 //Camera Options
 BOOL isCameraBottomSet, isCameraUI11, isCameraZoomFlip11;
@@ -81,7 +81,7 @@ BOOL isPIP;
 %hook YTSearchView
 - (void)setFrame:(CGRect)frame {
     if (statusBarMode == 3 || statusBarMode == 4)
-        %orig(CGRectSetY(frame, frame.origin.y + lumiStatusBarHeight/4));
+        %orig(CGRectSetY(frame, frame.origin.y + StatusBarHeight/4));
     else
         %orig;
 }
@@ -200,13 +200,13 @@ static bool appID(NSString *keyString) {
 // Tweak handle
 static void updatePrefs() {
     @autoreleasepool {
-        NSString *path = @"/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
-        NSString *pathDefault = @"/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
+        NSString *path = @"/var/jb/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
+        NSString *pathDefault = @"/var/jb/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
         NSFileManager *fileManager = [NSFileManager defaultManager];
         if (![fileManager fileExistsAtPath:path]) {
             [fileManager copyItemAtPath:pathDefault toPath:path error:nil];
         }
-        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
         if (prefs) {
             enabled = boolValueForKey(@"Enabled", prefs);
             statusBarMode = intValueForKey(@"statusBarMode", prefs);
@@ -215,7 +215,7 @@ static void updatePrefs() {
             KeyboardHeight = intValueForKey(@"bottomHeightKB", prefs);
             KeyboardBound = intValueForKey(@"boundKeyboard", prefs);
             isPIP = boolValueForKey(@"pictureInPicture", prefs);
-            lumiStatusBarHeight = intValueForKey(@"lumiStatusBarHeight", prefs);
+            StatusBarHeight = intValueForKey(@"StatusBarHeight", prefs);
             //Keyboard options:
             isHigherKeyboard = boolValueForKey(@"highKeyboard", prefs);
             isDarkKeyboard = boolValueForKey(@"darkKeyboard", prefs);

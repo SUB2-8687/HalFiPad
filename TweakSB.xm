@@ -27,7 +27,7 @@ BOOL isiPadDock, isInAppDock, isRecentApp;
 BOOL isiPadMultitask, isNewGridSwitcher;
 
 //Lumi
-NSInteger lumiStatusBarHeight;
+NSInteger StatusBarHeight;
 
 //General
 BOOL isEdgeProtect, isHomeBarAutoHide, isHomeBarSB, isHomeBarLS, isHomeBarCustom;
@@ -233,7 +233,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
     if (rows <= 3) return %orig;
 
     if(statusBarMode == 3 || statusBarMode == 4) {
-        return UIEdgeInsetsMake(x.top + lumiStatusBarHeight/4, x.left, x.bottom, x.right);
+        return UIEdgeInsetsMake(x.top + StatusBarHeight/4, x.left, x.bottom, x.right);
     }
     if(statusBarMode == 2) {
         return UIEdgeInsetsMake(x.top + 2, x.left, x.bottom, x.right);
@@ -244,7 +244,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 
 %hook _UIStatusBarVisualProvider_Split828
 +(double)height {
-    return lumiStatusBarHeight;
+    return StatusBarHeight;
 }
 
 +(CGSize)notchSize{
@@ -253,7 +253,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    return CGSizeMake(lumiStatusBarHeight, 18);
+    return CGSizeMake(StatusBarHeight, 18);
 }
 
 -(double)leadingItemSpacing {
@@ -283,7 +283,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 
 %hook _UIStatusBarVisualProvider_Split1170
 +(double)height {
-    return lumiStatusBarHeight;
+    return StatusBarHeight;
 }
 
 +(CGSize)notchSize{
@@ -292,7 +292,7 @@ void resetTouch(SBHomeGesturePanGestureRecognizer *self, NSSet *touches, id even
 }
 
 +(CGSize)pillSize {
-    return CGSizeMake(lumiStatusBarHeight, 18);
+    return CGSizeMake(StatusBarHeight, 18);
 }
 
 -(double)leadingItemSpacing {
@@ -962,13 +962,13 @@ int applicationDidFinishLaunching;
 
 static void updatePrefs() {
     @autoreleasepool {
-        NSString *path = @"/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
-        NSString *pathDefault = @"/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
+        NSString *path = @"/var/jb/User/Library/Preferences/com.hius.HalFiPadPrefs.plist";
+        NSString *pathDefault = @"/var/jb/Library/PreferenceBundles/HalFiPadPrefs.bundle/defaults.plist";
         NSFileManager *fileManager = [NSFileManager defaultManager];
         if (![fileManager fileExistsAtPath:path]) {
             [fileManager copyItemAtPath:pathDefault toPath:path error:nil];
         }
-        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
+        NSDictionary const *prefs = [[NSDictionary alloc] initWithContentsOfFile:@"/var/jb/var/mobile/Library/Preferences/com.hius.HalFiPadPrefs.plist"];
         if (prefs) {
             enabled = boolValueForKey(@"Enabled", prefs);
             batteryColorMode = intValueForKey(@"batteryColorMode", prefs);
@@ -980,7 +980,7 @@ static void updatePrefs() {
             HomeBarWidth = intValueForKey(@"homeBarWidth", prefs);
             HomeBarHeight = intValueForKey(@"homeBarHeight", prefs);
             HomeBarRadius = intValueForKey(@"homeBarRadius", prefs);
-            lumiStatusBarHeight = intValueForKey(@"lumiStatusBarHeight", prefs);
+            StatusBarHeight = intValueForKey(@"StatusBarHeight", prefs);
             //iPad features:
             isiPadDock = boolValueForKey(@"ipadDock", prefs);
             isiPadMultitask = boolValueForKey(@"iPadMultitask", prefs);
